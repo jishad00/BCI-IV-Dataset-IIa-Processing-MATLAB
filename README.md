@@ -12,7 +12,7 @@ This project preprocesses EEG data from the [BCI Competition IV Dataset IIa](htt
 
 ## Setup & Usage  
 1. **Download the dataset**:  
-   - Obtain `BCICIV_2a_mat.zip` from the [BNCI Horizon 2020 website](http://www.bnci-horizon-2020.eu/database/data-sets).  
+   - Obtain "Four class motor imagery (001-2014)" data from the [BNCI Horizon 2020 website](http://www.bnci-horizon-2020.eu/database/data-sets).  
 2. **Run the script**:  
    - Place the dataset files (e.g., `A01T.mat`) and `class_extract.m` in the same directory.  
    - Execute in MATLAB:  
