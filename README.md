@@ -1,5 +1,5 @@
-# EEG Motor Imagery Classification (BCI Competition IV Dataset IIa)  
-**MATLAB-based preprocessing pipeline for EEG data from motor imagery tasks.**  
+## MATLAB Pipeline for EEG Motor Imagery Data  
+*Preprocessing, filtering, and class extraction for BCI applications.*  
 
 ## Description  
 This project preprocesses EEG data from the [BCI Competition IV Dataset IIa](http://www.bnci-horizon-2020.eu/database/data-sets), focusing on:  
