@@ -16,8 +16,5 @@ This project preprocesses EEG data from the [BCI Competition IV Dataset IIa](htt
 2. **Run the script**:  
    - Place the dataset files (e.g., `A01T.mat`) and `class_extract.m` in the same directory.  
    - Execute in MATLAB:  
-     ```matlab
-     run('class_extract.m');
-     ```  
 3. **Output**:  
    - Filtered EEG signals and epochs separated by class (stored in MATLAB workspace variables). 
