@@ -1,20 +1,35 @@
-## MATLAB Pipeline for EEG Motor Imagery Data  
-*Preprocessing, filtering, and class extraction for BCI applications.*  
+# BCI-IV-Dataset-IIa-Processing-MATLAB
 
-## Description  
-This project preprocesses EEG data from the [BCI Competition IV Dataset IIa](http://www.bnci-horizon-2020.eu/database/data-sets), focusing on:  
-- **Bandpass filtering** (8–30 Hz) to isolate sensorimotor rhythms.  
-- **Epoch extraction** by class labels (left/right hand, feet, tongue).  
+MATLAB pipeline to preprocess BCI Competition IV — Dataset IIa and extract class-wise motor imagery epochs.
 
-## Technologies  
-- **MATLAB** (Signal Processing Toolbox recommended)  
-- **EEG Data**: BCI Competition IV Dataset IIa  
+**Author:** Dr. Muhamed Jishad T K.
 
-## Setup & Usage  
-1. **Download the dataset**:  
-   - Obtain "Four class motor imagery (001-2014)" data from the [BNCI Horizon 2020 website](http://www.bnci-horizon-2020.eu/database/data-sets).  
-2. **Run the script**:  
-   - Place the dataset files (e.g., `A01T.mat`) and `class_extract.m` in the same directory.  
-   - Execute in MATLAB.
-3. **Output**:  
-   - Filtered EEG signals and epochs separated by class (stored in MATLAB workspace variables). 
+---
+
+## What this repo contains
+
+- `src/class_extract.m` — main MATLAB function that:
+  - Loads subject `.mat` files `A0xT.mat` and `A0xE.mat`
+  - Applies bandpass filtering to EEG data
+  - Extracts task-related epochs for motor imagery classes (4 classes)
+  - Returns `CLS` struct with per-class epoch cells and metadata
+
+> The function preserves your original pipeline and parameters (band limits, epoch timing). It is Windows-friendly and uses `fullfile` for paths.
+
+---
+
+## Requirements
+
+- MATLAB R2018b or later (function uses standard MATLAB syntax; an `arguments` block is used — recommended R2019b+).  
+- Signal Processing Toolbox (for `designfilt`, `filtfilt`).  
+- Place BCI dataset files (e.g. `A01T.mat`, `A01E.mat`) in `data/BCICIV_2a_mat/` (repo root).
+
+---
+
+## Windows Quickstart (recommended)
+
+1. Clone the repo and open MATLAB.
+2. Set current folder to repo root in MATLAB.
+3. Add `src` to path if not automatically:
+   ```matlab
+   addpath(fullfile(pwd,'src'));
