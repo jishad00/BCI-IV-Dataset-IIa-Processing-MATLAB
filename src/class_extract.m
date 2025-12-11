@@ -29,6 +29,8 @@ end
 %   CLS.data contains class-specific epochs.
 
 % Build filenames
+% Construct absolute paths to the subject .mat files.
+% Expects files named 'A0<index>T.mat' and 'A0<index>E.mat' inside dataFolder.
 subE = fullfile(dataFolder, sprintf('A0%dE.mat', subjectIndex));
 subT = fullfile(dataFolder, sprintf('A0%dT.mat', subjectIndex));
 
@@ -40,6 +42,9 @@ AE = load(subE);
 AT = load(subT);
 
 %Design filter
+% Design a bandpass FIR filter using Kaiser window (designfilt).
+% Filter parameters (passband, stopband, ripple, attenuation, sample rate)
+% come from opts and are tuned for mu/beta range commonly used in MI BCI (8-30 Hz).
 Ap = opts.ap; %Maximum Passband ripple
 Aa = opts.aa;  %Minimum stopband attenuation
 fp1 = opts.fmin;  %Lower passband frequency
@@ -85,15 +90,20 @@ for r = trE-5:trE
     FAE.data{1,r-(trE-6)}.gender = AE.data{1, r}.gender;
     FAE.data{1,r-(trE-6)}.age = AE.data{1, r}.age;
 end
-%% Subject data combined to single file
+% Subject data combined to single file
 FA = FAT;
 for i = 1:6
     FA.data{1, 6+i} = FAE.data{1, i};
 end
-%% Class extraction from Subject EEG data
+% Class extraction from Subject EEG data
 run = 12;
 trl = 48;
 sampfreq = opts.fs;
+% Epoch timing:
+% - 'delay' represents offset (in samples) from trial start to the beginning of the MI interval.
+%   It accounts for beep, fixation, and cue (as per dataset timing scheme).
+% - 'duration' is the length of the task window (3 seconds here).
+% Update opts.epoch_delay_sec and opts.epoch_duration_sec at function call if needed.
 delay = 3*sampfreq; % delay includes the time for beep, fixation cross and cue; refer timing scheme
 duration = 3*sampfreq; % 3 second task specific EEG
 % extracting class data
