@@ -14,19 +14,19 @@ arguments
     opts.channels (1,1) double = 22
     opts.saveTo (1,:) char = ''
 end
-% EXTRACT_SUBJECT_CLASSES  Load subject files, bandpass filter and extract class epochs
+
+% class_extract
+% ---------------
+% Load subject training and evaluation MAT files (A0xT.mat, A0xE.mat),
+% apply bandpass filtering, and extract 3-second motor imagery epochs
+% for each of the 4 classes.
 %
-% CLS = extract_subject_classes(subjectIndex, dataFolder, opts)
+% Usage example:
+%   opts = struct('fs',250,'fmin',8,'fmax',30,'epoch_delay_sec',3,'epoch_duration_sec',3,'channels',22);
+%   CLS = class_extract(1, fullfile(pwd,'data','BCICIV_2a_mat'), opts);
 %
-% Example:
-%   opts = struct('fs',250,'fmin',8,'fmax',30,'epoch_delay_sec',3,'epoch_duration_sec',3);
-%   CLS = extract_subject_classes(1, 'data/BCICIV_2a_mat', opts);
-%
-% Output CLS contains:
-%   - epochsByClass: 1x4 cell; each cell is N_trials x (samples x channels) stored as cell array
-%
-% NOTE: This function is written to be robust to common .mat variable names in BCI files.
-%       It does not assume a particular variable layout except that trials and labels exist.
+% Output:
+%   CLS.data contains class-specific epochs.
 
 % Build filenames
 subE = fullfile(dataFolder, sprintf('A0%dE.mat', subjectIndex));
