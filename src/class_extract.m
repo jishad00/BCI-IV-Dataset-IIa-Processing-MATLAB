@@ -1,93 +1,127 @@
-close all; clear, clc
-%% load data
-subjectindex = 1; % Select the subject index out of the nine subjects
-    subE = strcat(sprintf('A0%dE.mat',subjectindex));
-    subT = strcat(sprintf('A0%dT.mat',subjectindex));
-    AE1 = load(subE);
-    AT1 = load(subT);
-    %% Design filter
-    Ap = 0.1;   %Maximum Passband ripple
-    Aa = 60;    %Minimum stopband attenuation
-    fp1 = 8;  %Lower passband frequency
-    fp2 = 30; %Upper passband frequency
-    fa1 = 7;  %Lower stopband frequency
-    fa2 = 31; %Upper stopband frequency
-    fs = 250;  %Sampling frequency
+function CLS = class_extract(subjectIndex, dataFolder, opts)
+arguments
+    subjectIndex (1,1) {mustBeNumeric}
+    dataFolder (1,:) char
+    opts.fs (1,1) double = 250 %Sampling frequency
+    opts.fmin (1,1) double = 8  %Lower passband frequency
+    opts.fmax (1,1) double = 30 %Upper passband frequency
+    opts.ap (1,1) double = 0.1 %Maximum Passband ripple
+    opts.aa (1,1) double = 60 %Minimum stopband attenuation
+    opts.fa1 (1,1) double = 7;  %Lower stopband frequency
+    opts.fa2 (1,1) double = 31; %Upper stopband frequency
+    opts.epoch_delay_sec (1,1) double = 3
+    opts.epoch_duration_sec (1,1) double = 3
+    opts.channels (1,1) double = 22
+    opts.saveTo (1,:) char = ''
+end
+% EXTRACT_SUBJECT_CLASSES  Load subject files, bandpass filter and extract class epochs
+%
+% CLS = extract_subject_classes(subjectIndex, dataFolder, opts)
+%
+% Example:
+%   opts = struct('fs',250,'fmin',8,'fmax',30,'epoch_delay_sec',3,'epoch_duration_sec',3);
+%   CLS = extract_subject_classes(1, 'data/BCICIV_2a_mat', opts);
+%
+% Output CLS contains:
+%   - epochsByClass: 1x4 cell; each cell is N_trials x (samples x channels) stored as cell array
+%
+% NOTE: This function is written to be robust to common .mat variable names in BCI files.
+%       It does not assume a particular variable layout except that trials and labels exist.
 
-    d = designfilt('bandpassfir','PassbandFrequency1',fp1, ...
-        'PassbandFrequency2',fp2, 'StopbandFrequency1',fa1, ...
-        'StopbandFrequency2',fa2, 'SampleRate',fs, ...
-        'PassbandRipple',Ap,'StopbandAttenuation1',Aa, 'StopbandAttenuation2',Aa,...
-        'DesignMethod','kaiserwin');
-    %% Subject 1 filterd data
-    ch = 22;
-    trT = length(AT1.data);
-    trE = length(AE1.data);
-    % Filtered signal for A01T
-    for r = trT-5:trT
-        for i = 1:ch
-            FAT1.data{1, r-(trT-6)}.X(:,i) = filtfilt(d, AT1.data{1, r}.X(:,i));
-        end
-        FAT1.data{1,r-(trT-6)}.trial = AT1.data{1, r}.trial;
-        FAT1.data{1,r-(trT-6)}.y = AT1.data{1, r}.y;
-        FAT1.data{1,r-(trT-6)}.fs = AT1.data{1, r}.fs;
-        FAT1.data{1,r-(trT-6)}.classes = AT1.data{1, r}.classes;
-        FAT1.data{1,r-(trT-6)}.artifacts = AT1.data{1, r}.artifacts;
-        FAT1.data{1,r-(trT-6)}.gender = AT1.data{1, r}.gender;
-        FAT1.data{1,r-(trT-6)}.age = AT1.data{1, r}.age;
-    end
+% Build filenames
+subE = fullfile(dataFolder, sprintf('A0%dE.mat', subjectIndex));
+subT = fullfile(dataFolder, sprintf('A0%dT.mat', subjectIndex));
 
-    % Filtered signal for A01E
-    for r = trE-5:trE
-        for i = 1:ch
-            FAE1.data{1, r-(trE-6)}.X(:,i) = filtfilt(d, AE1.data{1, r}.X(:,i));
-        end
-        FAE1.data{1,r-(trE-6)}.trial = AE1.data{1, r}.trial;
-        FAE1.data{1,r-(trE-6)}.y = AE1.data{1, r}.y;
-        FAE1.data{1,r-(trE-6)}.fs = AE1.data{1, r}.fs;
-        FAE1.data{1,r-(trE-6)}.classes = AE1.data{1, r}.classes;
-        FAE1.data{1,r-(trE-6)}.artifacts = AE1.data{1, r}.artifacts;
-        FAE1.data{1,r-(trE-6)}.gender = AE1.data{1, r}.gender;
-        FAE1.data{1,r-(trE-6)}.age = AE1.data{1, r}.age;
-    end
-    %% Subject data combined to single file
-    FA1 = FAT1;
-    for i = 1:6
-        FA1.data{1, 6+i} = FAE1.data{1, i};
-    end
-    %% Class extraction from Subject EEG data
-    run = 12;
-    trl = 48;
-    ch = 22;
-    sampfreq = 250;
-    delay = 3*sampfreq; % delay includes the time for beep, fixation cross and cue; refer timing scheme
-    duration = 3*sampfreq; % 3 second task specific EEG
-    % extracting class data
-    n = 1;
-    m = 1;
-    j = 1;
-    k = 1;
-    for r = 1:run
-        for i = 1:trl
-            x1 = FA1.data{1, r}.y(i,1); %class
-            x2 = FA1.data{1, r}.trial(i,1); %trial sample start point
-            if x1 == 1
-                CLS1.data{n,x1} = FA1.data{1, r}.X(x2+delay:x2+delay+duration-1,:);
-                n = n+1;
-            end
-            if x1 == 2
-                CLS1.data{m,x1} = FA1.data{1, r}.X(x2+delay:x2+delay+duration-1,:);
-                m = m+1;
-            end
-            if x1 == 3
-                CLS1.data{j,x1} = FA1.data{1, r}.X(x2+delay:x2+delay+duration-1,:);
-                j = j+1;
-            end
-            if x1 == 4
-                CLS1.data{k,x1} = FA1.data{1, r}.X(x2+delay:x2+delay+duration-1,:);
-                k = k+1;
-            end
+% Load and basic checks
+if ~exist(subE,'file') || ~exist(subT,'file')
+    error('Could not find subject files: %s or %s', subE, subT);
+end
+AE = load(subE);
+AT = load(subT);
 
-        end
+%Design filter
+Ap = opts.ap; %Maximum Passband ripple
+Aa = opts.aa;  %Minimum stopband attenuation
+fp1 = opts.fmin;  %Lower passband frequency
+fp2 = opts.fmax; %Upper passband frequency
+fa1 = opts.fa1;  %Lower stopband frequency
+fa2 = opts.fa2; %Upper stopband frequency
+fs = opts.fs; %Sampling frequency
+
+d = designfilt('bandpassfir','PassbandFrequency1',fp1, ...
+    'PassbandFrequency2',fp2, 'StopbandFrequency1',fa1, ...
+    'StopbandFrequency2',fa2, 'SampleRate',fs, ...
+    'PassbandRipple',Ap,'StopbandAttenuation1',Aa, 'StopbandAttenuation2',Aa,...
+    'DesignMethod','kaiserwin');
+
+% filterd data
+ch = opts.channels;
+trT = length(AT.data);
+trE = length(AE.data);
+% Filtered signal for AT
+for r = trT-5:trT
+    for i = 1:ch
+        FAT.data{1, r-(trT-6)}.X(:,i) = filtfilt(d, AT.data{1, r}.X(:,i));
     end
+    FAT.data{1,r-(trT-6)}.trial = AT.data{1, r}.trial;
+    FAT.data{1,r-(trT-6)}.y = AT.data{1, r}.y;
+    FAT.data{1,r-(trT-6)}.fs = AT.data{1, r}.fs;
+    FAT.data{1,r-(trT-6)}.classes = AT.data{1, r}.classes;
+    FAT.data{1,r-(trT-6)}.artifacts = AT.data{1, r}.artifacts;
+    FAT.data{1,r-(trT-6)}.gender = AT.data{1, r}.gender;
+    FAT.data{1,r-(trT-6)}.age = AT.data{1, r}.age;
+end
+
+% Filtered signal for AE
+for r = trE-5:trE
+    for i = 1:ch
+        FAE.data{1, r-(trE-6)}.X(:,i) = filtfilt(d, AE.data{1, r}.X(:,i));
+    end
+    FAE.data{1,r-(trE-6)}.trial = AE.data{1, r}.trial;
+    FAE.data{1,r-(trE-6)}.y = AE.data{1, r}.y;
+    FAE.data{1,r-(trE-6)}.fs = AE.data{1, r}.fs;
+    FAE.data{1,r-(trE-6)}.classes = AE.data{1, r}.classes;
+    FAE.data{1,r-(trE-6)}.artifacts = AE.data{1, r}.artifacts;
+    FAE.data{1,r-(trE-6)}.gender = AE.data{1, r}.gender;
+    FAE.data{1,r-(trE-6)}.age = AE.data{1, r}.age;
+end
+%% Subject data combined to single file
+FA = FAT;
+for i = 1:6
+    FA.data{1, 6+i} = FAE.data{1, i};
+end
+%% Class extraction from Subject EEG data
+run = 12;
+trl = 48;
+sampfreq = opts.fs;
+delay = 3*sampfreq; % delay includes the time for beep, fixation cross and cue; refer timing scheme
+duration = 3*sampfreq; % 3 second task specific EEG
+% extracting class data
+n = 1;
+m = 1;
+j = 1;
+k = 1;
+for r = 1:run
+    for i = 1:trl
+        x1 = FA.data{1, r}.y(i,1); %class
+        x2 = FA.data{1, r}.trial(i,1); %trial sample start point
+        if x1 == 1
+            CLS.data{n,x1} = FA.data{1, r}.X(x2+delay:x2+delay+duration-1,:);
+            n = n+1;
+        end
+        if x1 == 2
+            CLS.data{m,x1} = FA.data{1, r}.X(x2+delay:x2+delay+duration-1,:);
+            m = m+1;
+        end
+        if x1 == 3
+            CLS.data{j,x1} = FA.data{1, r}.X(x2+delay:x2+delay+duration-1,:);
+            j = j+1;
+        end
+        if x1 == 4
+            CLS.data{k,x1} = FA.data{1, r}.X(x2+delay:x2+delay+duration-1,:);
+            k = k+1;
+        end
+
+    end
+end
 
